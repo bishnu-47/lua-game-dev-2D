@@ -9,7 +9,7 @@ function Snake:load()
 
     self.isAlive = true
     self.timer = 0
-    self.direction = "right"
+    self.directionQueue = { 'right' }
 end
 
 function Snake:update(dt)
@@ -28,14 +28,25 @@ function Snake:update(dt)
 end
 
 function Snake:controller()
-    if love.keyboard.isDown("up") and self.direction ~= "down" then
-        self.direction = "up"
-    elseif love.keyboard.isDown("down") and self.direction ~= "up" then
-        self.direction = "down"
-    elseif love.keyboard.isDown("left") and self.direction ~= "right" then
-        self.direction = "left"
-    elseif love.keyboard.isDown("right") and self.direction ~= "left" then
-        self.direction = "right"
+    if love.keyboard.isDown("up")
+        and self.directionQueue[#self.directionQueue] ~= "up" -- prevent adding same direction
+        and self.directionQueue[#self.directionQueue] ~= "down" then -- prevent adding opp direction
+        table.insert(self.directionQueue, "up")
+
+    elseif love.keyboard.isDown("down")
+        and self.directionQueue[#self.directionQueue] ~= "down"
+        and self.directionQueue[#self.directionQueue] ~= "up" then
+        table.insert(self.directionQueue, "down")
+
+    elseif love.keyboard.isDown("left")
+        and self.directionQueue[#self.directionQueue] ~= "left"
+        and self.directionQueue[#self.directionQueue] ~= "right" then
+        table.insert(self.directionQueue, "left")
+
+    elseif love.keyboard.isDown("right")
+        and self.directionQueue[#self.directionQueue] ~= "right"
+        and self.directionQueue[#self.directionQueue] ~= "left" then
+        table.insert(self.directionQueue, "right")
     end
 end
 
@@ -50,6 +61,7 @@ function Snake:updatePosition()
         if self.snakeSegments[1].x == Apple.x
             and self.snakeSegments[1].y == Apple.y then
             Apple:reposition()
+            score = score + 1
         else -- else remove tail
             table.remove(self.snakeSegments)
         end
@@ -63,22 +75,26 @@ function Snake:getNewXandYPosition()
     local nextXPosition = self.snakeSegments[1].x
     local nextYPosition = self.snakeSegments[1].y
 
-    if self.direction == "up" then
+    if #self.directionQueue > 1 then
+        table.remove(self.directionQueue, 1)
+    end
+
+    if self.directionQueue[1] == "up" then
         nextYPosition = nextYPosition - 1
         if nextYPosition <= 0 then -- if snake crosses top
             nextYPosition = gridYCount
         end
-    elseif self.direction == "down" then
+    elseif self.directionQueue[1] == "down" then
         nextYPosition = nextYPosition + 1
         if nextYPosition > gridYCount then -- if snake crosses bottom
             nextYPosition = 1
         end
-    elseif self.direction == "left" then
+    elseif self.directionQueue[1] == "left" then
         nextXPosition = nextXPosition - 1
         if nextXPosition <= 0 then -- if snake crosses left bound
             nextXPosition = gridXCount
         end
-    elseif self.direction == "right" then
+    elseif self.directionQueue[1] == "right" then
         nextXPosition = nextXPosition + 1
         if nextXPosition > gridXCount then -- if snake crosses right bound
             nextXPosition = 1
@@ -113,6 +129,16 @@ function Snake:draw()
             (segment.y - 1) * cellSize,
             cellSize,
             cellSize
+        )
+    end
+
+    if not self.isAlive then
+        love.graphics.setColor(255, 255, 255)
+        love.graphics.setFont(love.graphics.newFont(24))
+        love.graphics.print(
+            "Game Over",
+            (gridXCount * cellSize) / 2 - (cellSize * 5),
+            (gridYCount * cellSize) / 2 - (cellSize * 2)
         )
     end
 end

@@ -5,6 +5,7 @@ function love.load()
     gridXCount = 20
     gridYCount = 15
     cellSize = 15
+    score = 0
 
     Snake:load()
     Apple:load()
@@ -25,7 +26,9 @@ function love.draw()
         gridXCount * cellSize,
         gridYCount * cellSize
     )
-
-    Snake:draw()
     Apple:draw()
+    Snake:draw()
+    love.graphics.setFont(love.graphics.newFont(12))
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.print(score, gridXCount * cellSize - cellSize, 0)
 end
